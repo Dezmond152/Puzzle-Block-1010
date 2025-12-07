@@ -1,8 +1,10 @@
 # 🧩 Puzzle-Block-1010
 
- <b/>A simple 1010 puzzle game without any libraries. Made with HTML Canvas. 
+<b/>A simple 1010 puzzle game without any libraries. Made with HTML Canvas. 
 
-![Game Banner](https://i.postimg.cc/vT8j0gdB/aasdasdasd.png)
+>**[🕹️ Game Link](https://dezmond152.github.io/Puzzle-Block-1010/)**
+ 
+<br/>![Game Banner](https://i.postimg.cc/vT8j0gdB/aasdasdasd.png)
 
 ## Rules
 
