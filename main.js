@@ -1,4 +1,4 @@
-import { drawGameGrid, drawBoard, drawFigures, drawPanel } from "./drawing.js";
+import { drawGameGrid, drawBoard, drawFigures, drawPanel, drawAnimations } from "./drawing.js";
 import { GameState } from "./gameState.js";
 
 export function createBoardWithRows(rows, cols, tileSize = 50) {
@@ -8,7 +8,8 @@ export function createBoardWithRows(rows, cols, tileSize = 50) {
       x: c * tileSize,
       y: r * tileSize,
       filled: false,
-      type: null
+      type: null,
+      animating: false,
     }));
   }
   return board;
@@ -90,12 +91,7 @@ export function getHoveredTile(pos, figures, tileSize, offsetX = 0, offsetY = 0)
       const py = (figure.y + dy) * tileSize + offsetY;
       const size = tileSize;
 
-      if (
-        pos.x >= px &&
-        pos.x < px + size &&
-        pos.y >= py &&
-        pos.y < py + size
-      ) {
+      if (pos.x >= px && pos.x < px + size && pos.y >= py && pos.y < py + size) {
         return { figure, tile: [dx, dy] };
       }
     }
@@ -129,56 +125,54 @@ canvas.addEventListener("mousemove", (evt) => {
     draggedFigure.x = Math.floor((pos.x - offsetX) / state.tileSize);
     draggedFigure.y = Math.floor((pos.y - offsetY) / state.tileSize);
   }
-  render();
 });
 
 canvas.addEventListener("mouseup", () => {
   if (gameOver) return;
-  if (draggedFigure) {
-    draggedFigure.dragging = false;
+  if (!draggedFigure) return;
 
-    let fits = true;
-    const cellsToFill = [];
+  draggedFigure.dragging = false;
 
-    for (const [dx, dy] of draggedFigure.shape) {
-      const bx = draggedFigure.x + dx;
-      const by = draggedFigure.y + dy;
+  let fits = true;
+  const cellsToFill = [];
 
-      if (bx < 0 || bx >= state.cols || by < 0 || by >= state.rows) {
-        fits = false;
-        break;
-      }
-      const cell = state.board[`row${by + 1}`][bx];
-      if (cell.filled) {
-        fits = false;
-        break;
-      }
-      cellsToFill.push(cell);
+  for (const [dx, dy] of draggedFigure.shape) {
+    const bx = draggedFigure.x + dx;
+    const by = draggedFigure.y + dy;
+
+    if (bx < 0 || bx >= state.cols || by < 0 || by >= state.rows) {
+      fits = false;
+      break;
     }
-
-    if (fits) {
-      for (const cell of cellsToFill) {
-        cell.filled = true;
-        cell.type = draggedFigure.type;
-      }
-
-      state.figures = state.figures.filter((f) => f !== draggedFigure);
-      state.clearFullLines();
-
-      if (state.figures.length === 0) state.initFigures();
-      if (!state.canPlaceAnyFigure()) {
-        gameOver = true;
-        overlay.classList.add("opacity-90", "pointer-events-auto");
-        overlay.classList.remove("opacity-0", "pointer-events-none");
-      }
-    } else {
-      draggedFigure.x = draggedFigure.originalX;
-      draggedFigure.y = draggedFigure.originalY;
+    const cell = state.board[`row${by + 1}`][bx];
+    if (cell.filled || cell.animating) {
+      fits = false;
+      break;
     }
-
-    draggedFigure = null;
-    render();
+    cellsToFill.push(cell);
   }
+
+  if (fits) {
+    for (const cell of cellsToFill) {
+      cell.filled = true;
+      cell.type = draggedFigure.type;
+    }
+
+    state.figures = state.figures.filter((f) => f !== draggedFigure);
+    state.clearFullLines();
+
+    if (state.figures.length === 0) state.initFigures();
+    if (!state.canPlaceAnyFigure()) {
+      gameOver = true;
+      overlay.classList.add("opacity-90", "pointer-events-auto");
+      overlay.classList.remove("opacity-0", "pointer-events-none");
+    }
+  } else {
+    draggedFigure.x = draggedFigure.originalX;
+    draggedFigure.y = draggedFigure.originalY;
+  }
+
+  draggedFigure = null;
 });
 
 restartBtn.addEventListener("click", () => {
@@ -186,15 +180,22 @@ restartBtn.addEventListener("click", () => {
   gameOver = false;
   overlay.classList.add("opacity-0", "pointer-events-none");
   overlay.classList.remove("opacity-90", "pointer-events-auto");
-  render();
 });
 
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  state.updateAnimations();
+
   drawPanel(ctx, state.score, offsetX, offsetY, state.cols, state.tileSize);
   drawGameGrid(ctx, state.rows, state.cols, state.tileSize, offsetX, offsetY);
   drawBoard(ctx, state.board, state.rows, state.cols, state.tileSize, offsetX, offsetY);
+  drawAnimations(ctx, state.animations, state.tileSize, offsetX, offsetY);
   drawFigures(ctx, state.figures, state.tileSize, offsetX, offsetY);
 }
 
-render();
+function loop() {
+  render();
+  requestAnimationFrame(loop);
+}
+loop();

@@ -5,10 +5,11 @@ export class GameState {
     this.rows = rows;
     this.cols = cols;
     this.tileSize = 50;
-    this.board = createBoardWithRows(rows, cols, this.tileSize);
+    this.board = createBoardWithRows(rows, cols, this.tileSize); // клетки с { animating: false }
     this.figures = [];
     this.selectedFigure = null;
     this.score = 0;
+    this.animations = []; // { cells: Cell[], progress: 0..1 }
   }
 
   initFigures() {
@@ -28,6 +29,7 @@ export class GameState {
     this.board = createBoardWithRows(this.rows, this.cols, this.tileSize);
     this.initFigures();
     this.score = 0;
+    this.animations = [];
   }
 
   canPlaceAnyFigure() {
@@ -42,7 +44,9 @@ export class GameState {
               fits = false;
               break;
             }
-            if (this.board[`row${by + 1}`][bx].filled) {
+            const cell = this.board[`row${by + 1}`][bx];
+            // считаем анимирующиеся клетки занятыми
+            if (cell.filled || cell.animating) {
               fits = false;
               break;
             }
@@ -55,36 +59,63 @@ export class GameState {
   }
 
   clearFullLines() {
-    let clearedLines = 0;
+    const cellsToAnimate = new Set();
+    let clearedRowCount = 0;
+    let clearedColCount = 0;
 
+    // Полные строки
     for (let r = 0; r < this.rows; r++) {
       const row = this.board[`row${r + 1}`];
-      if (row.every(cell => cell.filled)) {
+      if (row.every(cell => cell.filled && !cell.animating)) {
+        clearedRowCount++;
         for (const cell of row) {
-          cell.filled = false;
-          cell.type = null;
+          cellsToAnimate.add(cell);
         }
-        clearedLines++;
       }
     }
 
+    // Полные столбцы
     for (let c = 0; c < this.cols; c++) {
       let full = true;
       for (let r = 0; r < this.rows; r++) {
-        if (!this.board[`row${r + 1}`][c].filled) {
+        const cell = this.board[`row${r + 1}`][c];
+        if (!cell.filled || cell.animating) {
           full = false;
           break;
         }
       }
       if (full) {
+        clearedColCount++;
         for (let r = 0; r < this.rows; r++) {
-          this.board[`row${r + 1}`][c].filled = false;
-          this.board[`row${r + 1}`][c].type = null;
+          cellsToAnimate.add(this.board[`row${r + 1}`][c]);
         }
-        clearedLines++;
       }
     }
 
-    this.score += clearedLines * 100;
+    if (cellsToAnimate.size > 0) {
+      // помечаем клетки как анимирующиеся
+      const cells = Array.from(cellsToAnimate);
+      for (const cell of cells) {
+        cell.animating = true;
+      }
+      this.animations.push({ cells, progress: 0 });
+      this.score += (clearedRowCount + clearedColCount) * 100;
+    }
+  }
+
+  updateAnimations() {
+    if (this.animations.length === 0) return;
+    for (const anim of this.animations) {
+      anim.progress = Math.min(1, anim.progress + 0.06); // ~16fps -> ~1s
+      if (anim.progress >= 1) {
+        for (const cell of anim.cells) {
+          cell.filled = false;
+          cell.type = null;
+          cell.animating = false;
+        }
+      }
+    }
+    // удаляем завершённые
+    this.animations = this.animations.filter(a => a.progress < 1);
   }
 }
