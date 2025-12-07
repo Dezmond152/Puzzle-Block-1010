@@ -1,6 +1,16 @@
-export function drawGameGrid(ctx, rows, cols, tileSize = 50, offsetX = 0, offsetY = 0) {
-  ctx.lineWidth = 1;
+export function drawGameGrid(
+  ctx,
+  rows,
+  cols,
+  tileSize = 50,
+  offsetX = 0,
+  offsetY = 0
+) {
+  ctx.lineWidth = 1.3;
   ctx.strokeStyle = "#000000ff";
+  ctx.fillStyle = "#3D2B1F";
+  ctx.fillRect(offsetX, offsetY, cols * tileSize, rows * tileSize);
+
   for (let i = 0; i <= rows; i++) {
     const y = i * tileSize + 0.5 + offsetY;
     ctx.beginPath();
@@ -17,24 +27,40 @@ export function drawGameGrid(ctx, rows, cols, tileSize = 50, offsetX = 0, offset
   }
 }
 
-export function drawTile(ctx, x, y, tileSize = 50, offsetX = 0, offsetY = 0, alpha = 1) {
+export function drawTile(
+  ctx,
+  x,
+  y,
+  tileSize = 50,
+  offsetX = 0,
+  offsetY = 0,
+  alpha = 1
+) {
   const X = x * tileSize + offsetX;
   const Y = y * tileSize + offsetY;
+
   const gradient = ctx.createLinearGradient(X, Y, X, Y + tileSize);
-  gradient.addColorStop(0, "#2ed32eff");
-  gradient.addColorStop(1, "#1d701dff");
+  gradient.addColorStop(0, "#e6d5b8");
+  gradient.addColorStop(1, "#c2a679");
 
   ctx.globalAlpha = alpha;
   ctx.fillStyle = gradient;
   ctx.fillRect(X, Y, tileSize, tileSize);
 
-  ctx.strokeStyle = "#2d5a0fff";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#000000ff";
+  ctx.lineWidth = 1;
   ctx.strokeRect(X, Y, tileSize, tileSize);
+
   ctx.globalAlpha = 1;
 }
 
-export function drawFigures(ctx, figures, tileSize = 50, offsetX = 0, offsetY = 0) {
+export function drawFigures(
+  ctx,
+  figures,
+  tileSize = 50,
+  offsetX = 0,
+  offsetY = 0
+) {
   for (const figure of figures) {
     for (const [dx, dy] of figure.shape) {
       drawTile(ctx, figure.x + dx, figure.y + dy, tileSize, offsetX, offsetY);
@@ -42,12 +68,19 @@ export function drawFigures(ctx, figures, tileSize = 50, offsetX = 0, offsetY = 
   }
 }
 
-export function drawBoard(ctx, board, rows, cols, tileSize = 50, offsetX = 0, offsetY = 0) {
+export function drawBoard(
+  ctx,
+  board,
+  rows,
+  cols,
+  tileSize = 50,
+  offsetX = 0,
+  offsetY = 0
+) {
   for (let r = 0; r < rows; r++) {
     const row = board[`row${r + 1}`];
     for (let c = 0; c < cols; c++) {
       const cell = row[c];
-      // не рисуем клетки, которые сейчас анимируются (их рисует drawAnimations)
       if (cell.filled && !cell.animating) {
         drawTile(ctx, c, r, tileSize, offsetX, offsetY);
       }
@@ -55,7 +88,13 @@ export function drawBoard(ctx, board, rows, cols, tileSize = 50, offsetX = 0, of
   }
 }
 
-export function drawAnimations(ctx, animations, tileSize = 50, offsetX = 0, offsetY = 0) {
+export function drawAnimations(
+  ctx,
+  animations,
+  tileSize = 50,
+  offsetX = 0,
+  offsetY = 0
+) {
   for (const anim of animations) {
     for (const cell of anim.cells) {
       const c = cell.x / tileSize;
@@ -65,12 +104,11 @@ export function drawAnimations(ctx, animations, tileSize = 50, offsetX = 0, offs
       let size = tileSize;
 
       if (anim.progress < 0.3) {
-        // вспышка
-        ctx.fillStyle = "yellow";
+        ctx.fillStyle = "#ffd700";
       } else {
-        ctx.fillStyle = "green";
+        ctx.fillStyle = "#daa520";
         alpha = 1 - anim.progress;
-        size = tileSize * (1 - anim.progress); // схлопывание
+        size = tileSize * (1 - anim.progress);
       }
 
       const X = c * tileSize + offsetX + (tileSize - size) / 2;
@@ -89,7 +127,7 @@ export function drawPanel(ctx, score, offsetX, offsetY, cols, tileSize) {
   const panelX = offsetX;
   const panelY = offsetY - panelHeight - 20;
 
-  ctx.fillStyle = "#f0f0f0"; 
+  ctx.fillStyle = "#f0f0f0";
   ctx.strokeStyle = "#000000ff";
   ctx.lineWidth = 2;
 
@@ -97,11 +135,26 @@ export function drawPanel(ctx, score, offsetX, offsetY, cols, tileSize) {
   ctx.beginPath();
   ctx.moveTo(panelX + radius, panelY);
   ctx.lineTo(panelX + panelWidth - radius, panelY);
-  ctx.quadraticCurveTo(panelX + panelWidth, panelY, panelX + panelWidth, panelY + radius);
+  ctx.quadraticCurveTo(
+    panelX + panelWidth,
+    panelY,
+    panelX + panelWidth,
+    panelY + radius
+  );
   ctx.lineTo(panelX + panelWidth, panelY + panelHeight - radius);
-  ctx.quadraticCurveTo(panelX + panelWidth, panelY + panelHeight, panelX + panelWidth - radius, panelY + panelHeight);
+  ctx.quadraticCurveTo(
+    panelX + panelWidth,
+    panelY + panelHeight,
+    panelX + panelWidth - radius,
+    panelY + panelHeight
+  );
   ctx.lineTo(panelX + radius, panelY + panelHeight);
-  ctx.quadraticCurveTo(panelX, panelY + panelHeight, panelX, panelY + panelHeight - radius);
+  ctx.quadraticCurveTo(
+    panelX,
+    panelY + panelHeight,
+    panelX,
+    panelY + panelHeight - radius
+  );
   ctx.lineTo(panelX, panelY + radius);
   ctx.quadraticCurveTo(panelX, panelY, panelX + radius, panelY);
   ctx.closePath();
@@ -112,6 +165,10 @@ export function drawPanel(ctx, score, offsetX, offsetY, cols, tileSize) {
   ctx.fillStyle = "black";
   ctx.font = "24px Arial";
   ctx.textAlign = "center";
-  ctx.fillText("Score: " + score, panelX + panelWidth / 2, panelY + panelHeight / 2 + 8);
+  ctx.fillText(
+    "Score: " + score,
+    panelX + panelWidth / 2,
+    panelY + panelHeight / 2 + 8
+  );
   ctx.textAlign = "left";
 }

@@ -5,11 +5,11 @@ export class GameState {
     this.rows = rows;
     this.cols = cols;
     this.tileSize = 50;
-    this.board = createBoardWithRows(rows, cols, this.tileSize); // клетки с { animating: false }
+    this.board = createBoardWithRows(rows, cols, this.tileSize);
     this.figures = [];
     this.selectedFigure = null;
     this.score = 0;
-    this.animations = []; // { cells: Cell[], progress: 0..1 }
+    this.animations = [];
   }
 
   initFigures() {
@@ -45,7 +45,6 @@ export class GameState {
               break;
             }
             const cell = this.board[`row${by + 1}`][bx];
-            // считаем анимирующиеся клетки занятыми
             if (cell.filled || cell.animating) {
               fits = false;
               break;
@@ -63,7 +62,6 @@ export class GameState {
     let clearedRowCount = 0;
     let clearedColCount = 0;
 
-    // Полные строки
     for (let r = 0; r < this.rows; r++) {
       const row = this.board[`row${r + 1}`];
       if (row.every(cell => cell.filled && !cell.animating)) {
@@ -74,7 +72,6 @@ export class GameState {
       }
     }
 
-    // Полные столбцы
     for (let c = 0; c < this.cols; c++) {
       let full = true;
       for (let r = 0; r < this.rows; r++) {
@@ -93,7 +90,6 @@ export class GameState {
     }
 
     if (cellsToAnimate.size > 0) {
-      // помечаем клетки как анимирующиеся
       const cells = Array.from(cellsToAnimate);
       for (const cell of cells) {
         cell.animating = true;
@@ -115,7 +111,6 @@ export class GameState {
         }
       }
     }
-    // удаляем завершённые
     this.animations = this.animations.filter(a => a.progress < 1);
   }
 }
