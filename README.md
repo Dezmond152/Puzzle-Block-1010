@@ -4,7 +4,7 @@
 
 >**[🕹️ Game Link](https://dezmond152.github.io/Puzzle-Block-1010/)**
  
-<br/>![Game Banner](https://i.postimg.cc/vT8j0gdB/aasdasdasd.png)
+<br/>![Game Banner](https://i.postimg.cc/NMnWsj6h/image.png)
 
 ## Rules
 
